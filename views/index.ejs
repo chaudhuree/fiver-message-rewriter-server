@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fiverr Message Rewriter</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        #toast-success {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        .pagination-btn {
+            @apply px-3 py-1 mx-1 rounded border;
+        }
+        .pagination-btn.active {
+            @apply bg-blue-500 text-white;
+        }
+        .pagination-btn:disabled {
+            @apply opacity-50 cursor-not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg w-96 relative">
+            <button id="closeLoginModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div class="flex flex-col items-center mb-6">
+                <i class="fas fa-user-circle text-5xl text-blue-500 mb-4"></i>
+                <h2 class="text-2xl font-bold">Login</h2>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" id="loginEmail" required 
+                            class="pl-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="loginPassword" required 
+                            class="pl-10 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">
+                    Login
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container mx-auto py-8">
+        <!-- Header with Auth Button -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Fiverr Message Rewriter</h1>
+            <div id="authButtons">
+                <button id="loginBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg">
+                    Login
+                </button>
+            </div>
+            <div id="userInfo" class="hidden">
+                <span id="username" class="mr-4 text-gray-700 dark:text-gray-300"></span>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Public View: Approved Keywords -->
+        <div id="publicView" class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div class="flex flex-wrap gap-2 mb-4">
+                <!-- Approved keywords will be displayed here -->
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="text" id="newKeywordRequest" placeholder="Request new keyword" 
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                <button id="requestKeywordBtn" 
+                    class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg">
+                    Request Keyword
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin View: Keywords Management -->
+        <div id="adminView" class="hidden">
+            <div class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Keywords Management</h2>
+                    <button id="deleteAllBtn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                        Delete All Keywords
+                    </button>
+                </div>
+                
+                <!-- Keywords Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Keyword</th>
+                                <th scope="col" class="px-6 py-3">Status</th>
+                                <th scope="col" class="px-6 py-3">Created At</th>
+                                <th scope="col" class="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywordsTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex justify-center items-center mt-4" id="pagination">
+                    <button id="prevPage" class="pagination-btn">Previous</button>
+                    <span id="pageInfo" class="mx-4"></span>
+                    <button id="nextPage" class="pagination-btn">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Rewriter Section -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Message Rewriter</h2>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Type your message and click rewrite to transform it
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label for="message-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    <i class="fas fa-pen mr-2"></i>Your Message:
+                </label>
+                <textarea id="message-input" rows="4" 
+                    class="block p-4 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white transition duration-200"
+                    placeholder="Enter your message here..."></textarea>
+            </div>
+
+            <div class="mb-6">
+                <label for="rewritten-message" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    <i class="fas fa-magic mr-2"></i>Rewritten Message:
+                </label>
+                <textarea id="rewritten-message" rows="4" readonly
+                    class="block p-4 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition duration-200"
+                    style="display: none;"></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="rewrite-btn" 
+                    class="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled>
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Rewrite Message
+                </button>
+                <button id="copy-btn"
+                    class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center"
+                    style="display: none;">
+                    <i class="fas fa-copy mr-2"></i>
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-success" class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">
+            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+            </svg>
+        </div>
+        <div id="toast-message" class="ml-3 text-sm font-normal"></div>
+    </div>
+
+    <script>
+        // Auth state
+        let currentUser = null;
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // DOM Elements
+        const loginModal = document.getElementById('loginModal');
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const closeLoginModal = document.getElementById('closeLoginModal');
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const username = document.getElementById('username');
+        const publicView = document.getElementById('publicView');
+        const adminView = document.getElementById('adminView');
+        const keywordsTableBody = document.getElementById('keywordsTableBody');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+        const newKeywordRequest = document.getElementById('newKeywordRequest');
+        const requestKeywordBtn = document.getElementById('requestKeywordBtn');
+        const messageInput = document.getElementById('message-input');
+        const rewrittenMessage = document.getElementById('rewritten-message');
+        const rewriteBtn = document.getElementById('rewrite-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const toast = document.getElementById('toast-success');
+        const toastMessage = document.getElementById('toast-message');
+
+        // Check for existing auth token
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (token && user) {
+                currentUser = user;
+                updateUIForAuth();
+            }
+        }
+
+        // Update UI based on auth state
+        function updateUIForAuth() {
+            if (currentUser) {
+                authButtons.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                username.textContent = currentUser.username;
+                if (currentUser.role === 'admin') {
+                    adminView.classList.remove('hidden');
+                    publicView.classList.add('hidden');
+                    fetchKeywordsAdmin();
+                }
+            } else {
+                authButtons.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+                adminView.classList.add('hidden');
+                publicView.classList.remove('hidden');
+                username.textContent = '';
+            }
+            fetchApprovedKeywords();
+        }
+
+        // Show toast message
+        function showToast(message, duration = 4000) {
+            toastMessage.textContent = message;
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, duration);
+        }
+
+        // Fetch approved keywords for public view
+        async function fetchApprovedKeywords() {
+            try {
+                const response = await fetch('/keywords/approved');
+                if (!response.ok) throw new Error('Failed to fetch approved keywords');
+                const keywords = await response.json();
+                
+                const container = publicView.querySelector('.flex-wrap');
+                container.innerHTML = '';
+                
+                keywords.forEach(keyword => {
+                    const pill = document.createElement('span');
+                    pill.className = 'px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium';
+                    pill.textContent = keyword.word;
+                    container.appendChild(pill);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error fetching approved keywords');
+            }
+        }
+
+        // Fetch keywords for admin view with pagination
+        async function fetchKeywordsAdmin() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+
+            try {
+                const response = await fetch(`/keywords?page=${currentPage}&limit=${itemsPerPage}`);
+                if (!response.ok) throw new Error('Failed to fetch keywords');
+                const data = await response.json();
+                
+                keywordsTableBody.innerHTML = '';
+                data.keywords.forEach(keyword => {
+                    const row = document.createElement('tr');
+                    row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700';
+                    row.innerHTML = `
+                        <td class="px-6 py-4">${keyword.word}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 rounded ${keyword.isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                ${keyword.isApproved ? 'Approved' : 'Pending'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">${new Date(keyword.createdAt).toLocaleDateString()}</td>
+                        <td class="px-6 py-4">
+                            <button onclick="toggleApproval('${keyword._id}')" class="text-blue-600 hover:text-blue-900 mr-2">
+                                ${keyword.isApproved ? 'Unapprove' : 'Approve'}
+                            </button>
+                            <button onclick="deleteKeyword('${keyword._id}')" class="text-red-600 hover:text-red-900">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+                    keywordsTableBody.appendChild(row);
+                });
+
+                // Update pagination
+                pageInfo.textContent = `Page ${data.currentPage} of ${data.totalPages}`;
+                prevPageBtn.disabled = data.currentPage <= 1;
+                nextPageBtn.disabled = data.currentPage >= data.totalPages;
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error fetching keywords');
+            }
+        }
+
+        // Login handler
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                if (!response.ok) throw new Error('Invalid credentials');
+
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                currentUser = data.user;
+                
+                loginModal.classList.add('hidden');
+                showToast('Login successful');
+                updateUIForAuth();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Login failed: ' + error.message);
+            }
+        }
+
+        // Logout handler
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            currentUser = null;
+            updateUIForAuth();
+            showToast('Logged out successfully');
+        }
+
+        // Request new keyword (public)
+        async function requestKeyword() {
+            const word = newKeywordRequest.value.trim();
+            if (!word) return;
+
+            try {
+                const response = await fetch('/keywords/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ word }),
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to submit keyword request');
+                }
+
+                newKeywordRequest.value = '';
+                showToast('Your keyword request has been submitted');
+                fetchApprovedKeywords();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(error.message);
+            }
+        }
+
+        // Toggle keyword approval (admin only)
+        async function toggleApproval(id) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+
+            try {
+                const response = await fetch(`/keywords/${id}/approve`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                });
+
+                if (!response.ok) throw new Error('Failed to update keyword status');
+
+                showToast('Keyword status updated successfully');
+                fetchKeywordsAdmin();
+                fetchApprovedKeywords();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error updating keyword status');
+            }
+        }
+
+        // Delete keyword (admin only)
+        async function deleteKeyword(id) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            
+            try {
+                const response = await fetch(`/keywords/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                });
+
+                if (!response.ok) throw new Error('Failed to delete keyword');
+
+                showToast('Keyword deleted successfully');
+                fetchKeywordsAdmin();
+                fetchApprovedKeywords();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error deleting keyword');
+            }
+        }
+
+        // Delete all keywords
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
+        deleteAllBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/keywords/deleteAll', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                });
+
+                if (!response.ok) throw new Error('Failed to delete all keywords');
+
+                showToast('All keywords deleted successfully');
+                fetchKeywordsAdmin();
+                fetchApprovedKeywords();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error deleting all keywords');
+            }
+        });
+
+        // Helper function to rewrite individual words
+        function rewriteWord(word) {
+            if (word.length <= 2) return word; // Don't rewrite short words
+
+            // Choose either dash or underscore randomly
+            const symbol = Math.random() < 0.5 ? '-' : '_';
+            
+            // Find a random position in the middle of the word (not first or last character)
+            const position = Math.floor(Math.random() * (word.length - 2)) + 1;
+            
+            // Insert the symbol at the random position
+            return word.slice(0, position) + symbol + word.slice(position);
+        }
+
+        // Rewrite message using approved keywords and custom logic
+        async function rewriteMessage() {
+            const message = messageInput.value;
+            if (!message) return;
+
+            try {
+                rewriteBtn.disabled = true;
+                rewriteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Rewriting...';
+
+                const response = await fetch('/keywords/approved');
+                if (!response.ok) throw new Error('Failed to fetch approved keywords');
+                
+                const keywords = await response.json();
+                const originalNewlines = message.split('\n');
+
+                let rewrittenMessageText = originalNewlines.map(line => {
+                    if (!line) return line; // Preserve empty lines
+
+                    let rewrittenLine = line;
+                    keywords.forEach(keyword => {
+                        const regex = new RegExp(keyword.word, 'gi');
+                        rewrittenLine = rewrittenLine.replace(regex, rewriteWord);
+                    });
+                    return rewrittenLine;
+                }).join('\n');
+
+                rewrittenMessage.value = rewrittenMessageText;
+                
+                // Animate the appearance of the rewritten message
+                rewrittenMessage.style.opacity = "0";
+                rewrittenMessage.style.display = "block";
+                copyBtn.style.display = "flex";
+                setTimeout(() => {
+                    rewrittenMessage.style.opacity = "1";
+                    rewrittenMessage.style.transition = "opacity 0.3s ease-in-out";
+                }, 0);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error rewriting message');
+            } finally {
+                rewriteBtn.disabled = false;
+                rewriteBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Rewrite Message';
+            }
+        }
+
+        // Event listener for message input to enable/disable rewrite button
+        messageInput.addEventListener('input', function() {
+            const isEmpty = this.value.trim() === '';
+            rewriteBtn.disabled = isEmpty;
+            rewriteBtn.classList.toggle('opacity-50', isEmpty);
+            rewriteBtn.classList.toggle('cursor-not-allowed', isEmpty);
+            
+            if (isEmpty) {
+                rewrittenMessage.style.display = "none";
+                copyBtn.style.display = "none";
+            }
+        });
+
+        // Prevent newline on Enter key
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (!rewriteBtn.disabled) {
+                    rewriteMessage();
+                }
+            }
+        });
+
+        // Copy button functionality with animation
+        copyBtn.addEventListener('click', () => {
+            rewrittenMessage.select();
+            document.execCommand('copy');
+            
+            // Add temporary animation class
+            copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+            copyBtn.classList.add('bg-green-500');
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fas fa-copy mr-2"></i>Copy to Clipboard';
+                copyBtn.classList.remove('bg-green-500');
+            }, 2000);
+            
+            showToast('Copied to clipboard!');
+        });
+
+        // Event Listeners
+        loginBtn.addEventListener('click', () => loginModal.classList.remove('hidden'));
+        closeLoginModal.addEventListener('click', () => loginModal.classList.add('hidden'));
+        loginForm.addEventListener('submit', handleLogin);
+        logoutBtn.addEventListener('click', handleLogout);
+        requestKeywordBtn.addEventListener('click', requestKeyword);
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchKeywordsAdmin();
+            }
+        });
+        nextPageBtn.addEventListener('click', () => {
+            currentPage++;
+            fetchKeywordsAdmin();
+        });
+        rewriteBtn.addEventListener('click', rewriteMessage);
+
+        // Initialize
+        checkAuth();
+        fetchApprovedKeywords();
+    </script>
+</body>
+</html>
