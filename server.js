@@ -5,6 +5,7 @@ const keywordRoutes = require('./routes/keywords');
 const authRoutes = require('./routes/auth');
 const morgan = require('morgan');
 const Keyword = require('./models/keyword');
+const cors = require('cors');
 
 // Load environment variables from .env file
 require('dotenv').config();
@@ -13,6 +14,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors(
+    {
+        origin: ['http://localhost:5000', 'https://relevance-eight.vercel.app'],
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        credentials: true
+    }
+));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
