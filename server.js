@@ -6,6 +6,9 @@ const authRoutes = require('./routes/auth');
 const morgan = require('morgan');
 const Keyword = require('./models/keyword');
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -19,7 +22,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // MongoDB Connection
-mongoose.connect('mongodb://localhost:27017/fiverrRewriter', {
+mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
