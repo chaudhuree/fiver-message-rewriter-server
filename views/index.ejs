@@ -525,12 +525,31 @@
                     let rewrittenMessageText = originalNewlines.map(line => {
                         if (!line) return line; // Preserve empty lines
 
-                        let rewrittenLine = line;
-                        keywords.forEach(keyword => {
-                            const regex = new RegExp(keyword.word, 'gi');
-                            rewrittenLine = rewrittenLine.replace(regex, rewriteWord);
+                        // URL regex pattern to identify links
+                        const urlPattern = /(https?:\/\/[^\s]+)/g;
+                        
+                        // Split the line by URLs
+                        const parts = line.split(urlPattern);
+                        
+                        // Process each part - if it's a URL, keep it as is; otherwise, rewrite it
+                        const processedParts = parts.map((part, index) => {
+                            // Check if this part is a URL (every odd index after splitting by URL pattern)
+                            if (index % 2 === 1) {
+                                // This is a URL, return it unchanged
+                                return part;
+                            } else {
+                                // This is regular text, apply rewriting
+                                let rewrittenPart = part;
+                                keywords.forEach(keyword => {
+                                    const regex = new RegExp(keyword.word, 'gi');
+                                    rewrittenPart = rewrittenPart.replace(regex, rewriteWord);
+                                });
+                                return rewrittenPart;
+                            }
                         });
-                        return rewrittenLine;
+                        
+                        // Join the parts back together
+                        return processedParts.join('');
                     }).join('\n');
 
                     rewrittenMessage.value = rewrittenMessageText;
