@@ -198,6 +198,24 @@
             <div id="toast-message" class="ml-3 text-sm font-normal"></div>
         </div>
 
+        <!-- Highlighted Text Modal -->
+        <div id="highlightModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center flex z-50">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-lg w-11/12 md:w-3/4 lg:w-2/3 max-h-[80vh] relative shadow-xl">
+                <button id="closeHighlightModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="flex flex-col items-center mb-6">
+                    <div class="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg mb-4">
+                        <i class="fas fa-highlighter text-purple-600 dark:text-purple-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Highlighted Changes</h2>
+                </div>
+                <div id="highlightedContent" class="overflow-y-auto max-h-[50vh] p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                    <!-- Highlighted content will be inserted here -->
+                </div>
+            </div>
+        </div>
+
         <script>
             // Auth state
             let currentUser = null;
@@ -227,6 +245,10 @@
             const copyBtn = document.getElementById('copy-btn');
             const toast = document.getElementById('toast-success');
             const toastMessage = document.getElementById('toast-message');
+            const highlightViewBtn = document.getElementById('highlight-view-btn');
+            const highlightModal = document.getElementById('highlightModal');
+            const closeHighlightModal = document.getElementById('closeHighlightModal');
+            const highlightedContent = document.getElementById('highlightedContent');
 
             // Check for existing auth token
             function checkAuth() {
@@ -617,6 +639,10 @@
                             </span>
                         </span>
                     </button>
+                    <button id="highlight-view-btn" class="ml-3 text-blue-500 hover:text-blue-700 focus:outline-none" title="View highlighted changes">
+                        <i class="fas fa-highlighter text-purple-600 dark:text-purple-400 text-lg"></i>
+                       
+                    </button>
                 </div>
             `;
             
@@ -725,7 +751,116 @@
                 autoResize(rewrittenMessage);
             };
 
-            // Event Listeners
+            // Function to show the highlight modal with formatted content
+            function showHighlightedChanges() {
+                // Only show if there's content in the rewritten message
+                if (!rewrittenMessage.value.trim()) {
+                    showToast('No rewritten content to display');
+                    return;
+                }
+
+                // Get the original and rewritten messages
+                const originalText = messageInput.value;
+                const rewrittenText = rewrittenMessage.value;
+                
+                // Fetch approved keywords to identify what was changed
+                fetch('/keywords/approved')
+                    .then(response => response.json())
+                    .then(keywords => {
+                        // Create a map of original words to their rewritten versions
+                        const wordMap = new Map();
+                        
+                        // Process the original text to find words that match keywords
+                        const originalWords = originalText.split(/\s+/);
+                        const rewrittenWords = rewrittenText.split(/\s+/);
+                        
+                        // Find differences between original and rewritten text
+                        let htmlContent = '';
+                        const originalLines = originalText.split('\n');
+                        const rewrittenLines = rewrittenText.split('\n');
+                        
+                        // Process each line
+                        for (let i = 0; i < rewrittenLines.length; i++) {
+                            if (i < originalLines.length) {
+                                const originalLine = originalLines[i];
+                                const rewrittenLine = rewrittenLines[i];
+                                
+                                if (originalLine === rewrittenLine) {
+                                    // Line is unchanged
+                                    htmlContent += `<p class="mb-2">${escapeHtml(rewrittenLine)}</p>`;
+                                } else {
+                                    // Line has changes, highlight the differences
+                                    const highlightedLine = highlightChanges(originalLine, rewrittenLine, keywords);
+                                    htmlContent += `<p class="mb-2">${highlightedLine}</p>`;
+                                }
+                            } else {
+                                // This is likely metadata that was added
+                                htmlContent += `<p class="mb-2 text-blue-600 dark:text-blue-400">${escapeHtml(rewrittenLines[i])}</p>`;
+                            }
+                        }
+                        
+                        // Set the content and show the modal
+                        highlightedContent.innerHTML = htmlContent || '<p>No changes detected</p>';
+                        highlightModal.classList.remove('hidden');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Error processing highlighted view');
+                    });
+            }
+            
+            // Helper function to escape HTML special characters
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Function to highlight changes between original and rewritten text
+            function highlightChanges(originalLine, rewrittenLine, keywords) {
+                let result = escapeHtml(rewrittenLine);
+                
+                // Find all words that contain a dash or underscore (potential rewrites)
+                const rewrittenWords = rewrittenLine.split(/\s+/);
+                
+                for (const word of rewrittenWords) {
+                    if (word.includes('-') || word.includes('_')) {
+                        // This word might be rewritten
+                        const baseWord = word.replace(/[-_]/g, '');
+                        
+                        // Improved matching logic to catch all rewritten words
+                        let shouldHighlight = false;
+                        
+                        // Check if this is a rewritten keyword
+                        for (const keyword of keywords) {
+                            if (baseWord.toLowerCase() === keyword.word.toLowerCase()) {
+                                shouldHighlight = true;
+                                break;
+                            }
+                            
+                            // Check if the word contains the keyword
+                            if (baseWord.toLowerCase().includes(keyword.word.toLowerCase())) {
+                                shouldHighlight = true;
+                                break;
+                            }
+                        }
+                        
+                        if (shouldHighlight) {
+                            // This is a rewritten word, highlight it
+                            const escapedWord = escapeHtml(word);
+                            // Use a more precise regex to avoid partial word matches
+                            const regex = new RegExp(`(^|\\s)${escapedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$|[.,!?;:])`, 'g');
+                            result = result.replace(regex, (match, p1, p2) => 
+                                `${p1}<span class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">${escapedWord}</span>${p2}`
+                            );
+                        }
+                    }
+                }
+                
+                return result;
+            }
+            
+            // Event listeners
             loginBtn.addEventListener('click', () => loginModal.classList.remove('hidden'));
             closeLoginModal.addEventListener('click', () => loginModal.classList.add('hidden'));
             loginForm.addEventListener('submit', handleLogin);
@@ -742,6 +877,31 @@
                 fetchKeywordsAdmin();
             });
             rewriteBtn.addEventListener('click', rewriteMessage);
+            
+            // Fix for highlight modal not appearing
+            document.addEventListener('DOMContentLoaded', function() {
+                const highlightViewBtn = document.getElementById('highlight-view-btn');
+                if (highlightViewBtn) {
+                    highlightViewBtn.addEventListener('click', showHighlightedChanges);
+                }
+                
+                const closeHighlightModal = document.getElementById('closeHighlightModal');
+                if (closeHighlightModal) {
+                    closeHighlightModal.addEventListener('click', () => {
+                        document.getElementById('highlightModal').classList.add('hidden');
+                    });
+                }
+                
+                // Close modal when clicking outside
+                const highlightModal = document.getElementById('highlightModal');
+                if (highlightModal) {
+                    highlightModal.addEventListener('click', (e) => {
+                        if (e.target === highlightModal) {
+                            highlightModal.classList.add('hidden');
+                        }
+                    });
+                }
+            });
 
             // Initialize
             checkAuth();
