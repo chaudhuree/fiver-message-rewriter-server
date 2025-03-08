@@ -144,7 +144,22 @@
                     </span>
                 </div>
             </div>
-            
+
+            <div class="flex justify-center gap-4 my-8">
+                <button id="rewrite-btn" 
+                    class="w-40 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled>
+                    <i class="fas fa-sync-alt mr-2 h-4 w-4"></i>
+                    Rewrite
+                </button>
+                <button id="copy-btn"
+                    class="w-40 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled>
+                    <i class="fas fa-copy mr-2 h-4 w-4"></i>
+                    Copy
+                </button>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-3">
                     <label for="message-input" class="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -171,20 +186,6 @@
                 </div>
             </div>
 
-            <div class="flex justify-center gap-4 mt-8">
-                <button id="rewrite-btn" 
-                    class="w-40 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    disabled>
-                    <i class="fas fa-sync-alt mr-2 h-4 w-4"></i>
-                    Rewrite
-                </button>
-                <button id="copy-btn"
-                    class="w-40 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
-                    disabled>
-                    <i class="fas fa-copy mr-2 h-4 w-4"></i>
-                    Copy
-                </button>
-            </div>
         </div>
 
         <!-- Toast Notification -->
@@ -587,6 +588,138 @@
             // Initial resize
             autoResize(messageInput);
             rewrittenMessage.style.height = messageInput.style.height;
+
+            // Add metadata toggle and fields
+            const messageContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-6');
+            
+            // Create metadata toggle section
+            const metadataToggleSection = document.createElement('div');
+            metadataToggleSection.className = 'flex items-center justify-between mt-6 mb-2';
+            metadataToggleSection.innerHTML = `
+                <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 mr-3">Add Message Metadata</span>
+                    <button type="button" id="metadata-toggle" 
+                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2" 
+                        role="switch" aria-checked="false">
+                        <span class="sr-only">Toggle metadata fields</span>
+                        <span class="pointer-events-none relative inline-block h-5 w-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                            <!-- Not Enabled: Cross icon -->
+                            <span class="absolute inset-0 flex h-full w-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in" aria-hidden="true">
+                                <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                                    <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <!-- Enabled: Check icon -->
+                            <span class="absolute inset-0 flex h-full w-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out" aria-hidden="true">
+                                <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
+                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                                </svg>
+                            </span>
+                        </span>
+                    </button>
+                </div>
+            `;
+            
+            // Create metadata fields container
+            const metadataFields = document.createElement('div');
+            metadataFields.id = 'metadata-fields';
+            metadataFields.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 hidden';
+            metadataFields.innerHTML = `
+                <div>
+                    <input type="text" id="message-type" placeholder="Message Type" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+                <div>
+                    <input type="text" id="client-name" placeholder="Client Name" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+                <div>
+                    <input type="text" id="profile-name" placeholder="Profile Name" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+                <div>
+                    <input type="text" id="order-id" placeholder="Order ID" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+            `;
+            
+            // Insert the toggle and fields after the message container
+            messageContainer.parentNode.insertBefore(metadataToggleSection, messageContainer.nextSibling);
+            messageContainer.parentNode.insertBefore(metadataFields, metadataToggleSection.nextSibling);
+            
+            // Toggle metadata fields visibility - updated for the new toggle button
+            document.getElementById('metadata-toggle').addEventListener('click', function() {
+                const metadataFields = document.getElementById('metadata-fields');
+                const isEnabled = this.getAttribute('aria-checked') === 'true';
+                
+                // Toggle the state
+                if (!isEnabled) {
+                    // Enable
+                    this.setAttribute('aria-checked', 'true');
+                    this.classList.remove('bg-gray-200');
+                    this.classList.add('bg-blue-600');
+                    
+                    // Move the circle
+                    const circle = this.querySelector('.pointer-events-none');
+                    circle.classList.remove('translate-x-0');
+                    circle.classList.add('translate-x-5');
+                    
+                    // Switch icons
+                    const crossIcon = circle.querySelector('.opacity-100');
+                    const checkIcon = circle.querySelector('.opacity-0');
+                    crossIcon.classList.remove('opacity-100', 'duration-200', 'ease-in');
+                    crossIcon.classList.add('opacity-0', 'duration-100', 'ease-out');
+                    checkIcon.classList.remove('opacity-0', 'duration-100', 'ease-out');
+                    checkIcon.classList.add('opacity-100', 'duration-200', 'ease-in');
+                    
+                    // Show fields
+                    metadataFields.classList.remove('hidden');
+                } else {
+                    // Disable
+                    this.setAttribute('aria-checked', 'false');
+                    this.classList.remove('bg-blue-600');
+                    this.classList.add('bg-gray-200');
+                    
+                    // Move the circle
+                    const circle = this.querySelector('.pointer-events-none');
+                    circle.classList.remove('translate-x-5');
+                    circle.classList.add('translate-x-0');
+                    
+                    // Switch icons
+                    const crossIcon = circle.querySelector('.opacity-0');
+                    const checkIcon = circle.querySelector('.opacity-100');
+                    crossIcon.classList.remove('opacity-0', 'duration-100', 'ease-out');
+                    crossIcon.classList.add('opacity-100', 'duration-200', 'ease-in');
+                    checkIcon.classList.remove('opacity-100', 'duration-200', 'ease-in');
+                    checkIcon.classList.add('opacity-0', 'duration-100', 'ease-out');
+                    
+                    // Hide fields
+                    metadataFields.classList.add('hidden');
+                }
+            });
+            
+            // Modify rewrite function to include metadata when enabled
+            const originalRewriteMessage = rewriteMessage;
+            rewriteMessage = async function() {
+                await originalRewriteMessage.apply(this, arguments);
+                
+                // Check if metadata toggle is enabled
+                if (document.getElementById('metadata-toggle').getAttribute('aria-checked') === 'true') {
+                    const messageType = document.getElementById('message-type').value.trim();
+                    const clientName = document.getElementById('client-name').value.trim();
+                    const profileName = document.getElementById('profile-name').value.trim();
+                    const orderId = document.getElementById('order-id').value.trim();
+                    
+                    // Only append metadata if at least one field has a value
+                    if (messageType || clientName || profileName || orderId) {
+                        const metadataLine = `\n\n${messageType} || ${clientName} || ${profileName} || ${orderId}`;
+                        rewrittenMessage.value += metadataLine;
+                    }
+                }
+                
+                // Adjust heights after adding metadata
+                autoResize(rewrittenMessage);
+            };
 
             // Event Listeners
             loginBtn.addEventListener('click', () => loginModal.classList.remove('hidden'));
