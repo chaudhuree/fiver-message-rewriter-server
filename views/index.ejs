@@ -144,7 +144,22 @@
                     </span>
                 </div>
             </div>
-            
+
+            <div class="flex justify-center gap-4 my-8">
+                <button id="rewrite-btn" 
+                    class="w-40 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled>
+                    <i class="fas fa-sync-alt mr-2 h-4 w-4"></i>
+                    Rewrite
+                </button>
+                <button id="copy-btn"
+                    class="w-40 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled>
+                    <i class="fas fa-copy mr-2 h-4 w-4"></i>
+                    Copy
+                </button>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-3">
                     <label for="message-input" class="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -171,20 +186,6 @@
                 </div>
             </div>
 
-            <div class="flex justify-center gap-4 mt-8">
-                <button id="rewrite-btn" 
-                    class="w-40 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    disabled>
-                    <i class="fas fa-sync-alt mr-2 h-4 w-4"></i>
-                    Rewrite
-                </button>
-                <button id="copy-btn"
-                    class="w-40 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition duration-200 flex items-center justify-center dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
-                    disabled>
-                    <i class="fas fa-copy mr-2 h-4 w-4"></i>
-                    Copy
-                </button>
-            </div>
         </div>
 
         <!-- Toast Notification -->
@@ -195,6 +196,42 @@
                 </svg>
             </div>
             <div id="toast-message" class="ml-3 text-sm font-normal"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-gray-800 mt-12 rounded-lg shadow">
+          <div class="mx-auto max-w-7xl px-6 py-8 md:flex md:items-center md:justify-between lg:px-8">
+            <div class="flex justify-center gap-x-6 md:order-2">
+              <a href="https://www.linkedin.com/in/chaudhuree" target="_blank" class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">
+                <span class="sr-only">LinkedIn</span>
+                <i class="fab fa-linkedin text-xl"></i>
+              </a>
+
+              <a href="https://github.com/chaudhuree" target="_blank" class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">
+                <span class="sr-only">GitHub</span>
+                <i class="fab fa-github text-xl"></i>
+              </a>
+            </div>
+            <p class="mt-8 text-center text-sm/6 text-gray-600 dark:text-gray-400 md:order-1 md:mt-0">Developed By <span class="underline">sOhan chaudhuree</span></p>
+          </div>
+        </footer>
+
+        <!-- Highlighted Text Modal -->
+        <div id="highlightModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center flex z-50">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-lg w-11/12 md:w-3/4 lg:w-2/3 max-h-[80vh] relative shadow-xl">
+                <button id="closeHighlightModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="flex flex-col items-center mb-6">
+                    <div class="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg mb-4">
+                        <i class="fas fa-highlighter text-purple-600 dark:text-purple-400 text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Highlighted Changes</h2>
+                </div>
+                <div id="highlightedContent" class="overflow-y-auto max-h-[50vh] p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                    <!-- Highlighted content will be inserted here -->
+                </div>
+            </div>
         </div>
 
         <script>
@@ -226,6 +263,10 @@
             const copyBtn = document.getElementById('copy-btn');
             const toast = document.getElementById('toast-success');
             const toastMessage = document.getElementById('toast-message');
+            const highlightViewBtn = document.getElementById('highlight-view-btn');
+            const highlightModal = document.getElementById('highlightModal');
+            const closeHighlightModal = document.getElementById('closeHighlightModal');
+            const highlightedContent = document.getElementById('highlightedContent');
 
             // Check for existing auth token
             function checkAuth() {
@@ -502,12 +543,31 @@
                     let rewrittenMessageText = originalNewlines.map(line => {
                         if (!line) return line; // Preserve empty lines
 
-                        let rewrittenLine = line;
-                        keywords.forEach(keyword => {
-                            const regex = new RegExp(keyword.word, 'gi');
-                            rewrittenLine = rewrittenLine.replace(regex, rewriteWord);
+                        // URL regex pattern to identify links
+                        const urlPattern = /(https?:\/\/[^\s]+)/g;
+                        
+                        // Split the line by URLs
+                        const parts = line.split(urlPattern);
+                        
+                        // Process each part - if it's a URL, keep it as is; otherwise, rewrite it
+                        const processedParts = parts.map((part, index) => {
+                            // Check if this part is a URL (every odd index after splitting by URL pattern)
+                            if (index % 2 === 1) {
+                                // This is a URL, return it unchanged
+                                return part;
+                            } else {
+                                // This is regular text, apply rewriting
+                                let rewrittenPart = part;
+                                keywords.forEach(keyword => {
+                                    const regex = new RegExp(keyword.word, 'gi');
+                                    rewrittenPart = rewrittenPart.replace(regex, rewriteWord);
+                                });
+                                return rewrittenPart;
+                            }
                         });
-                        return rewrittenLine;
+                        
+                        // Join the parts back together
+                        return processedParts.join('');
                     }).join('\n');
 
                     rewrittenMessage.value = rewrittenMessageText;
@@ -588,7 +648,256 @@
             autoResize(messageInput);
             rewrittenMessage.style.height = messageInput.style.height;
 
-            // Event Listeners
+            // Add metadata toggle and fields
+            const messageContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-6');
+            
+            // Create metadata toggle section
+            const metadataToggleSection = document.createElement('div');
+            metadataToggleSection.className = 'flex items-center justify-between mt-6 mb-2';
+            metadataToggleSection.innerHTML = `
+                <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 mr-3">Add Message Metadata</span>
+                    <button type="button" id="metadata-toggle" 
+                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2" 
+                        role="switch" aria-checked="false">
+                        <span class="sr-only">Toggle metadata fields</span>
+                        <span class="pointer-events-none relative inline-block h-5 w-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
+                            <!-- Not Enabled: Cross icon -->
+                            <span class="absolute inset-0 flex h-full w-full items-center justify-center opacity-100 transition-opacity duration-200 ease-in" aria-hidden="true">
+                                <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                                    <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <!-- Enabled: Check icon -->
+                            <span class="absolute inset-0 flex h-full w-full items-center justify-center opacity-0 transition-opacity duration-100 ease-out" aria-hidden="true">
+                                <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
+                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                                </svg>
+                            </span>
+                        </span>
+                    </button>
+                    <button id="highlight-view-btn" class="ml-3 text-blue-500 hover:text-blue-700 focus:outline-none" title="View highlighted changes">
+                        <i class="fas fa-highlighter text-purple-600 dark:text-purple-400 text-lg"></i>
+                       
+                    </button>
+                </div>
+            `;
+            
+            // Create metadata fields container
+            const metadataFields = document.createElement('div');
+            metadataFields.id = 'metadata-fields';
+            metadataFields.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 hidden';
+            metadataFields.innerHTML = `
+                <div>
+                    <input type="text" id="message-type" placeholder="Message Type" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+                <div>
+                    <input type="text" id="client-name" placeholder="Client Name" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+                <div>
+                    <input type="text" id="profile-name" placeholder="Profile Name" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+                <div>
+                    <input type="text" id="order-id" placeholder="Order ID" 
+                        class="block p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                </div>
+            `;
+            
+            // Insert the toggle and fields after the message container
+            messageContainer.parentNode.insertBefore(metadataToggleSection, messageContainer.nextSibling);
+            messageContainer.parentNode.insertBefore(metadataFields, metadataToggleSection.nextSibling);
+            
+            // Toggle metadata fields visibility - updated for the new toggle button
+            document.getElementById('metadata-toggle').addEventListener('click', function() {
+                const metadataFields = document.getElementById('metadata-fields');
+                const isEnabled = this.getAttribute('aria-checked') === 'true';
+                
+                // Toggle the state
+                if (!isEnabled) {
+                    // Enable
+                    this.setAttribute('aria-checked', 'true');
+                    this.classList.remove('bg-gray-200');
+                    this.classList.add('bg-blue-600');
+                    
+                    // Move the circle
+                    const circle = this.querySelector('.pointer-events-none');
+                    circle.classList.remove('translate-x-0');
+                    circle.classList.add('translate-x-5');
+                    
+                    // Switch icons
+                    const crossIcon = circle.querySelector('.opacity-100');
+                    const checkIcon = circle.querySelector('.opacity-0');
+                    crossIcon.classList.remove('opacity-100', 'duration-200', 'ease-in');
+                    crossIcon.classList.add('opacity-0', 'duration-100', 'ease-out');
+                    checkIcon.classList.remove('opacity-0', 'duration-100', 'ease-out');
+                    checkIcon.classList.add('opacity-100', 'duration-200', 'ease-in');
+                    
+                    // Show fields
+                    metadataFields.classList.remove('hidden');
+                } else {
+                    // Disable
+                    this.setAttribute('aria-checked', 'false');
+                    this.classList.remove('bg-blue-600');
+                    this.classList.add('bg-gray-200');
+                    
+                    // Move the circle
+                    const circle = this.querySelector('.pointer-events-none');
+                    circle.classList.remove('translate-x-5');
+                    circle.classList.add('translate-x-0');
+                    
+                    // Switch icons
+                    const crossIcon = circle.querySelector('.opacity-0');
+                    const checkIcon = circle.querySelector('.opacity-100');
+                    crossIcon.classList.remove('opacity-0', 'duration-100', 'ease-out');
+                    crossIcon.classList.add('opacity-100', 'duration-200', 'ease-in');
+                    checkIcon.classList.remove('opacity-100', 'duration-200', 'ease-in');
+                    checkIcon.classList.add('opacity-0', 'duration-100', 'ease-out');
+                    
+                    // Hide fields
+                    metadataFields.classList.add('hidden');
+                }
+            });
+            
+            // Modify rewrite function to include metadata when enabled
+            const originalRewriteMessage = rewriteMessage;
+            rewriteMessage = async function() {
+                await originalRewriteMessage.apply(this, arguments);
+                
+                // Check if metadata toggle is enabled
+                if (document.getElementById('metadata-toggle').getAttribute('aria-checked') === 'true') {
+                    const messageType = document.getElementById('message-type').value.trim();
+                    const clientName = document.getElementById('client-name').value.trim();
+                    const profileName = document.getElementById('profile-name').value.trim();
+                    const orderId = document.getElementById('order-id').value.trim();
+                    
+                    // Only append metadata if at least one field has a value
+                    if (messageType || clientName || profileName || orderId) {
+                        // Create an array of non-empty values
+                        const metadataValues = [messageType, clientName, profileName, orderId].filter(value => value);
+                        
+                        // Join the non-empty values with the separator
+                        const metadataLine = `\n\n${metadataValues.join(' || ')}`;
+                        rewrittenMessage.value += metadataLine;
+                    }
+                }
+                
+                // Adjust heights after adding metadata
+                autoResize(rewrittenMessage);
+            };
+
+            // Function to show the highlight modal with formatted content
+            function showHighlightedChanges() {
+                // Only show if there's content in the rewritten message
+                if (!rewrittenMessage.value.trim()) {
+                    showToast('No rewritten content to display');
+                    return;
+                }
+
+                // Get the original and rewritten messages
+                const originalText = messageInput.value;
+                const rewrittenText = rewrittenMessage.value;
+                
+                // Fetch approved keywords to identify what was changed
+                fetch('/keywords/approved')
+                    .then(response => response.json())
+                    .then(keywords => {
+                        // Create a map of original words to their rewritten versions
+                        const wordMap = new Map();
+                        
+                        // Process the original text to find words that match keywords
+                        const originalWords = originalText.split(/\s+/);
+                        const rewrittenWords = rewrittenText.split(/\s+/);
+                        
+                        // Find differences between original and rewritten text
+                        let htmlContent = '';
+                        const originalLines = originalText.split('\n');
+                        const rewrittenLines = rewrittenText.split('\n');
+                        
+                        // Process each line
+                        for (let i = 0; i < rewrittenLines.length; i++) {
+                            if (i < originalLines.length) {
+                                const originalLine = originalLines[i];
+                                const rewrittenLine = rewrittenLines[i];
+                                
+                                if (originalLine === rewrittenLine) {
+                                    // Line is unchanged
+                                    htmlContent += `<p class="mb-2">${escapeHtml(rewrittenLine)}</p>`;
+                                } else {
+                                    // Line has changes, highlight the differences
+                                    const highlightedLine = highlightChanges(originalLine, rewrittenLine, keywords);
+                                    htmlContent += `<p class="mb-2">${highlightedLine}</p>`;
+                                }
+                            } else {
+                                // This is likely metadata that was added
+                                htmlContent += `<p class="mb-2 text-blue-600 dark:text-blue-400">${escapeHtml(rewrittenLines[i])}</p>`;
+                            }
+                        }
+                        
+                        // Set the content and show the modal
+                        highlightedContent.innerHTML = htmlContent || '<p>No changes detected</p>';
+                        highlightModal.classList.remove('hidden');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Error processing highlighted view');
+                    });
+            }
+            
+            // Helper function to escape HTML special characters
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Function to highlight changes between original and rewritten text
+            function highlightChanges(originalLine, rewrittenLine, keywords) {
+                let result = escapeHtml(rewrittenLine);
+                
+                // Find all words that contain a dash or underscore (potential rewrites)
+                const rewrittenWords = rewrittenLine.split(/\s+/);
+                
+                for (const word of rewrittenWords) {
+                    if (word.includes('-') || word.includes('_')) {
+                        // This word might be rewritten
+                        const baseWord = word.replace(/[-_]/g, '');
+                        
+                        // Improved matching logic to catch all rewritten words
+                        let shouldHighlight = false;
+                        
+                        // Check if this is a rewritten keyword
+                        for (const keyword of keywords) {
+                            if (baseWord.toLowerCase() === keyword.word.toLowerCase()) {
+                                shouldHighlight = true;
+                                break;
+                            }
+                            
+                            // Check if the word contains the keyword
+                            if (baseWord.toLowerCase().includes(keyword.word.toLowerCase())) {
+                                shouldHighlight = true;
+                                break;
+                            }
+                        }
+                        
+                        if (shouldHighlight) {
+                            // This is a rewritten word, highlight it
+                            const escapedWord = escapeHtml(word);
+                            // Use a more precise regex to avoid partial word matches
+                            const regex = new RegExp(`(^|\\s)${escapedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$|[.,!?;:])`, 'g');
+                            result = result.replace(regex, (match, p1, p2) => 
+                                `${p1}<span class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">${escapedWord}</span>${p2}`
+                            );
+                        }
+                    }
+                }
+                
+                return result;
+            }
+            
+            // Event listeners
             loginBtn.addEventListener('click', () => loginModal.classList.remove('hidden'));
             closeLoginModal.addEventListener('click', () => loginModal.classList.add('hidden'));
             loginForm.addEventListener('submit', handleLogin);
@@ -605,6 +914,31 @@
                 fetchKeywordsAdmin();
             });
             rewriteBtn.addEventListener('click', rewriteMessage);
+            
+            // Fix for highlight modal not appearing
+            document.addEventListener('DOMContentLoaded', function() {
+                const highlightViewBtn = document.getElementById('highlight-view-btn');
+                if (highlightViewBtn) {
+                    highlightViewBtn.addEventListener('click', showHighlightedChanges);
+                }
+                
+                const closeHighlightModal = document.getElementById('closeHighlightModal');
+                if (closeHighlightModal) {
+                    closeHighlightModal.addEventListener('click', () => {
+                        document.getElementById('highlightModal').classList.add('hidden');
+                    });
+                }
+                
+                // Close modal when clicking outside
+                const highlightModal = document.getElementById('highlightModal');
+                if (highlightModal) {
+                    highlightModal.addEventListener('click', (e) => {
+                        if (e.target === highlightModal) {
+                            highlightModal.classList.add('hidden');
+                        }
+                    });
+                }
+            });
 
             // Initialize
             checkAuth();
