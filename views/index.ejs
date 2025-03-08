@@ -712,7 +712,11 @@
                     
                     // Only append metadata if at least one field has a value
                     if (messageType || clientName || profileName || orderId) {
-                        const metadataLine = `\n\n${messageType} || ${clientName} || ${profileName} || ${orderId}`;
+                        // Create an array of non-empty values
+                        const metadataValues = [messageType, clientName, profileName, orderId].filter(value => value);
+                        
+                        // Join the non-empty values with the separator
+                        const metadataLine = `\n\n${metadataValues.join(' || ')}`;
                         rewrittenMessage.value += metadataLine;
                     }
                 }
