@@ -32,6 +32,7 @@
             </button>
             <div class="flex flex-col items-center mb-6">
                 <i class="fas fa-user-circle text-5xl text-blue-500 mb-4"></i>
+                
                 <h2 class="text-2xl font-bold">Login</h2>
             </div>
             <form id="loginForm" class="space-y-4">
@@ -65,8 +66,13 @@
     <div class="container mx-auto py-8 px-6">
         <!-- Header with Auth Button -->
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Fiverr Message Rewriter</h1>
-            <div id="authButtons">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Fiverr Message Rewriter</h1>
+            <!-------------------------------------------------------
+            *********************************************************
+            NOTE: remove the class hidden to show the login button  
+            *********************************************************
+            -------------------------------------------------------->
+            <div id="authButtons" class="hidden">
                 <button id="loginBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg">
                     Login
                 </button>
@@ -79,57 +85,8 @@
             </div>
         </div>
 
-        <!-- Public View: Approved Keywords -->
-        <div id="publicView" class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-            <div class="flex flex-wrap gap-2 mb-4">
-                <!-- Approved keywords will be displayed here -->
-            </div>
-            <div class="flex items-center gap-2">
-                <input type="text" id="newKeywordRequest" placeholder="Request new keyword" 
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                <button id="requestKeywordBtn" 
-                    class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg">
-                    Request Keyword
-                </button>
-            </div>
-        </div>
-
-        <!-- Admin View: Keywords Management -->
-        <div id="adminView" class="hidden">
-            <div class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Keywords Management</h2>
-                    <button id="deleteAllBtn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
-                        Delete All Keywords
-                    </button>
-                </div>
-                
-                <!-- Keywords Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">Keyword</th>
-                                <th scope="col" class="px-6 py-3">Status</th>
-                                <th scope="col" class="px-6 py-3">Created At</th>
-                                <th scope="col" class="px-6 py-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="keywordsTableBody"></tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="flex justify-center items-center mt-4" id="pagination">
-                    <button id="prevPage" class="pagination-btn">Previous</button>
-                    <span id="pageInfo" class="mx-4"></span>
-                    <button id="nextPage" class="pagination-btn">Next</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Message Rewriter Section -->
-        <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-8 rounded-xl shadow-2xl">
+          <!-- Message Rewriter Section -->
+          <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-8 rounded-xl shadow-2xl">
             <div class="flex items-center justify-between mb-8">
                 <div class="flex items-center space-x-3">
                     <div class="bg-blue-500 p-2 rounded-lg">
@@ -187,6 +144,74 @@
             </div>
 
         </div>
+
+
+        <!-- Public View: Approved Keywords -->
+        <div id="publicView" class="my-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-green-500 p-2 rounded-lg">
+                        <i class="fas fa-tags text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Approved Keywords</h2>
+                </div>
+                <!-- <div class="bg-green-50 dark:bg-gray-700 px-4 py-2 rounded-full hidden md:block">
+                    <span class="text-sm text-green-600 dark:text-green-300">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Available keywords for message rewriting
+                    </span>
+                </div> -->
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+                <!-- Approved keywords will be displayed here -->
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input type="text" id="newKeywordRequest" placeholder="Request new keyword" 
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-48 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                <button id="requestKeywordBtn" 
+                    class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg">
+                    Request Keyword
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin View: Keywords Management -->
+        <div id="adminView" class="hidden">
+            <div class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Keywords Management</h2>
+                    <button id="deleteAllBtn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                        Delete All Keywords
+                    </button>
+                </div>
+                
+                <!-- Keywords Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Keyword</th>
+                                <th scope="col" class="px-6 py-3">Status</th>
+                                <th scope="col" class="px-6 py-3">Created At</th>
+                                <th scope="col" class="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywordsTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex justify-center items-center mt-4" id="pagination">
+                    <button id="prevPage" class="pagination-btn">Previous</button>
+                    <span id="pageInfo" class="mx-4"></span>
+                    <button id="nextPage" class="pagination-btn">Next</button>
+                </div>
+            </div>
+        </div>
+
+      
 
         <!-- Toast Notification -->
         <div id="toast-success" class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 z-40" role="alert">
@@ -303,8 +328,21 @@
             function showToast(message, duration = 4000) {
                 toastMessage.textContent = message;
                 toast.style.display = 'flex';
+                
+                // Add warning styling if message contains "Cannot rewrite"
+                if (message.includes('Cannot rewrite')) {
+                    toast.classList.add('bg-red-100', 'dark:bg-red-900');
+                    toastMessage.classList.add('text-red-700', 'dark:text-red-300');
+                } else {
+                    toast.classList.remove('bg-red-100', 'dark:bg-red-900');
+                    toastMessage.classList.remove('text-red-700', 'dark:text-red-300');
+                }
+                
                 setTimeout(() => {
                     toast.style.display = 'none';
+                    // Reset classes
+                    toast.classList.remove('bg-red-100', 'dark:bg-red-900');
+                    toastMessage.classList.remove('text-red-700', 'dark:text-red-300');
                 }, duration);
             }
 
@@ -516,7 +554,8 @@
                 if (word.length <= 2) return word; // Don't rewrite short words
 
                 // Choose either dash or underscore randomly
-                const symbol = Math.random() < 0.5 ? '-' : '_';
+                // const symbol = Math.random() < 0.5 ? '-' : '_';
+                const symbol = '-';
                 
                 // Find a random position in the middle of the word (not first or last character)
                 const position = Math.floor(Math.random() * (word.length - 2)) + 1;
@@ -525,10 +564,30 @@
                 return word.slice(0, position) + symbol + word.slice(position);
             }
 
-            // Rewrite message using approved keywords and custom logic
+            // Add restricted words list
+            const RESTRICTED_WORDS = ['fiverr', 'upwork', 'freelancer', 'peopleperhour'];
+
+            // Add function to check for restricted words
+            function checkForRestrictedWords(message) {
+                const lowerMessage = message.toLowerCase();
+                const foundWords = RESTRICTED_WORDS.filter(word => lowerMessage.includes(word));
+                return foundWords.length > 0 ? foundWords : false;
+            }
+
+            // Modify rewrite function to include restricted words check
             async function rewriteMessage() {
                 const message = messageInput.value;
                 if (!message) return;
+
+                // Check for restricted words
+                const restrictedWordsFound = checkForRestrictedWords(message);
+                if (restrictedWordsFound) {
+                    showToast(`Cannot rewrite: Message contains restricted word(s): ${restrictedWordsFound.join(', ')}`, 5000);
+                    rewrittenMessage.value = '';
+                    rewrittenMessage.style.opacity = "0.5";
+                    copyBtn.disabled = true;
+                    return;
+                }
 
                 try {
                     rewriteBtn.disabled = true;
@@ -538,9 +597,11 @@
                     if (!response.ok) throw new Error('Failed to fetch approved keywords');
                     
                     const keywords = await response.json();
-                    const originalNewlines = message.split('\n');
-
-                    let rewrittenMessageText = originalNewlines.map(line => {
+                    
+                    // Split message into lines, excluding any existing metadata
+                    const messageLines = message.split('\n').filter(line => !line.includes(' || '));
+                    
+                    let rewrittenMessageText = messageLines.map(line => {
                         if (!line) return line; // Preserve empty lines
 
                         // URL regex pattern to identify links
@@ -570,11 +631,26 @@
                         return processedParts.join('');
                     }).join('\n');
 
+                    // Add metadata only if toggle is enabled and fields have values
+                    if (document.getElementById('metadata-toggle').getAttribute('aria-checked') === 'true') {
+                        const messageType = document.getElementById('message-type').value.trim();
+                        const clientName = document.getElementById('client-name').value.trim();
+                        const profileName = document.getElementById('profile-name').value.trim();
+                        const orderId = document.getElementById('order-id').value.trim();
+                        
+                        // Only add metadata if at least one field has a value
+                        if (messageType || clientName || profileName || orderId) {
+                            const metadataValues = [messageType, clientName, profileName, orderId].filter(value => value);
+                            rewrittenMessageText += `\n\n${metadataValues.join(' || ')}`;
+                        }
+                    }
+
                     rewrittenMessage.value = rewrittenMessageText;
-                    
-                    // Enable copy button and set opacity
                     rewrittenMessage.style.opacity = "1";
                     copyBtn.disabled = false;
+
+                    // Adjust height of rewritten message independently
+                    autoResize(rewrittenMessage);
 
                 } catch (error) {
                     console.error('Error:', error);
@@ -586,18 +662,43 @@
                 }
             }
 
-            // Event listener for message input to enable/disable rewrite button
+            // Update the autoResize function to handle textareas independently
+            function autoResize(textarea) {
+                // Reset height to auto first to get the correct scrollHeight
+                textarea.style.height = 'auto';
+                // Set new height based on scrollHeight
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+
+            // Modify message input event listener
             messageInput.addEventListener('input', function() {
-                const isEmpty = this.value.trim() === '';
-                rewriteBtn.disabled = isEmpty;
-                rewriteBtn.classList.toggle('opacity-50', isEmpty);
-                rewriteBtn.classList.toggle('cursor-not-allowed', isEmpty);
+                autoResize(this);
                 
-                if (isEmpty) {
-                    rewrittenMessage.value = '';
-                    copyBtn.disabled = true;
+                const restrictedWordsFound = checkForRestrictedWords(this.value);
+                const isEmpty = this.value.trim() === '';
+                
+                if (restrictedWordsFound) {
+                    rewriteBtn.disabled = true;
+                    rewriteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    messageInput.classList.add('border-red-300');
+                    // Show warning message below input
+                    if (!document.getElementById('warning-message')) {
+                        const warningDiv = document.createElement('div');
+                        warningDiv.id = 'warning-message';
+                        warningDiv.className = 'text-red-500 text-sm mt-2';
+                        warningDiv.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>Message contains restricted word(s): ${restrictedWordsFound.join(', ')}`;
+                        messageInput.parentNode.appendChild(warningDiv);
+                    }
                 } else {
-                    copyBtn.disabled = false;
+                    rewriteBtn.disabled = isEmpty;
+                    rewriteBtn.classList.toggle('opacity-50', isEmpty);
+                    rewriteBtn.classList.toggle('cursor-not-allowed', isEmpty);
+                    messageInput.classList.remove('border-red-300');
+                    // Remove warning message if exists
+                    const warningDiv = document.getElementById('warning-message');
+                    if (warningDiv) {
+                        warningDiv.remove();
+                    }
                 }
             });
 
@@ -620,33 +721,22 @@
                 showToast('Copied to clipboard!');
             });
 
-            // Auto resize textareas
-            function autoResize(textarea) {
-                // Reset height to auto to get the correct scrollHeight
-                textarea.style.height = 'auto';
-                // Set new height based on scrollHeight
-                textarea.style.height = textarea.scrollHeight + 'px';
-            }
-
-            // Initialize auto-resize for both textareas
-            messageInput.addEventListener('input', function() {
+            // Add event listener for rewritten message changes
+            rewrittenMessage.addEventListener('input', function() {
                 autoResize(this);
-                // Sync heights between textareas
-                rewrittenMessage.style.height = this.style.height;
             });
 
-            // Also handle the rewritten message height when it gets new content
-            const originalAutoResize = rewriteMessage;
-            rewriteMessage = async function() {
-                await originalAutoResize.apply(this, arguments);
-                // After rewriting, adjust heights
+            // Initialize both textareas with minimum height
+            document.addEventListener('DOMContentLoaded', function() {
+                // Set initial minimum height for both textareas
+                const minHeight = '144px'; // This matches your min-h-[144px] class
+                messageInput.style.minHeight = minHeight;
+                rewrittenMessage.style.minHeight = minHeight;
+                
+                // Initial resize for both textareas
                 autoResize(messageInput);
-                rewrittenMessage.style.height = messageInput.style.height;
-            };
-
-            // Initial resize
-            autoResize(messageInput);
-            rewrittenMessage.style.height = messageInput.style.height;
+                autoResize(rewrittenMessage);
+            });
 
             // Add metadata toggle and fields
             const messageContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.gap-6');
@@ -761,33 +851,6 @@
                 }
             });
             
-            // Modify rewrite function to include metadata when enabled
-            const originalRewriteMessage = rewriteMessage;
-            rewriteMessage = async function() {
-                await originalRewriteMessage.apply(this, arguments);
-                
-                // Check if metadata toggle is enabled
-                if (document.getElementById('metadata-toggle').getAttribute('aria-checked') === 'true') {
-                    const messageType = document.getElementById('message-type').value.trim();
-                    const clientName = document.getElementById('client-name').value.trim();
-                    const profileName = document.getElementById('profile-name').value.trim();
-                    const orderId = document.getElementById('order-id').value.trim();
-                    
-                    // Only append metadata if at least one field has a value
-                    if (messageType || clientName || profileName || orderId) {
-                        // Create an array of non-empty values
-                        const metadataValues = [messageType, clientName, profileName, orderId].filter(value => value);
-                        
-                        // Join the non-empty values with the separator
-                        const metadataLine = `\n\n${metadataValues.join(' || ')}`;
-                        rewrittenMessage.value += metadataLine;
-                    }
-                }
-                
-                // Adjust heights after adding metadata
-                autoResize(rewrittenMessage);
-            };
-
             // Function to show the highlight modal with formatted content
             function showHighlightedChanges() {
                 // Only show if there's content in the rewritten message
